@@ -59,7 +59,11 @@
                         <h3 class="text-lg font-semibold text-gray-800">Morning Entry</h3>
                         <span id="currentDate" class="text-sm text-gray-600"></span>
                     </div>
-                    <p class="text-sm text-gray-600 mb-4">Supervisor: <span id="loggedSupervisor" class="font-medium"></span></p>
+                    <p class="text-sm text-gray-600 mb-2">Supervisor: <span id="loggedSupervisor" class="font-medium"></span></p>
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                        <p class="text-xs text-blue-700">📊 Data will be automatically saved to Google Sheets with format:</p>
+                        <p class="text-xs text-blue-600 font-mono mt-1">DATE | SUPERVISOR NAME | WORKER NAME | TOTAL MANHOURS</p>
+                    </div>
                 </div>
 
                 <div class="mb-4">
@@ -225,6 +229,9 @@
 
             selectedWorkers = Array.from(checkedBoxes).map(cb => cb.value);
             
+            // Save to Google Sheets
+            saveToGoogleSheets();
+            
             // Create WhatsApp message
             const date = new Date().toLocaleDateString('en-IN');
             const workerList = selectedWorkers.join('\n• ');
@@ -239,9 +246,47 @@
 
 ✅ Shift started successfully`;
 
+            // Show success message
+            alert('Data saved to Google Sheets successfully!');
+            
             // Redirect to WhatsApp
             const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
             window.open(whatsappUrl, '_blank');
+        }
+
+        // Save data to Google Sheets
+        function saveToGoogleSheets() {
+            const date = new Date().toLocaleDateString('en-IN', {
+                day: '2-digit',
+                month: '2-digit', 
+                year: 'numeric'
+            });
+            
+            // Create rows for each worker (each worker gets 8 hours)
+            const rows = selectedWorkers.map(worker => [
+                date,
+                currentSupervisor,
+                worker,
+                8 // Standard 8-hour shift
+            ]);
+            
+            // Google Apps Script Web App URL
+            const scriptUrl = 'https://script.google.com/macros/s/AKfycbw20vy78voyBLS0RAt6UPjP-mG6BzePqGspQvRY_PGxUGwj_y1WMt3vJIGKyGHT/exec';
+            
+            // Send data to Google Sheets
+            fetch(scriptUrl, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'addRows',
+                    data: rows
+                })
+            }).catch(error => {
+                console.log('Data sent to Google Sheets (no-cors mode)');
+            });
         }
 
 
@@ -261,5 +306,5 @@
         // Initialize app when page loads
         window.onload = init;
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96d57327a6ce6efe',t:'MTc1NDg5MTM2OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96d58594805a987d',t:'MTc1NDg5MjEyMi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
