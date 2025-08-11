@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shift Management System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .pin-input { letter-spacing: 0.5em; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <div class="container mx-auto px-4 py-6 max-w-md">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">Shift Manager</h1>
+            <p class="text-gray-600">Cloud-based workforce tracking</p>
+        </div>
+
+        <!-- Login Section -->
+        <div id="loginSection" class="bg-white rounded-2xl shadow-xl p-6 mb-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-6 text-center">Supervisor Login</h2>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Select Supervisor</label>
+                <select id="supervisorSelect" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="">Choose supervisor...</option>
+                    <option value="MAHENDRA KUMAR">MAHENDRA KUMAR</option>
+                    <option value="PINTU SAH">PINTU SAH</option>
+                    <option value="HARKIRAT SINGH">HARKIRAT SINGH</option>
+                    <option value="SUNIL CHAUHAN">SUNIL CHAUHAN</option>
+                    <option value="NSUP1">NSUP1</option>
+                    <option value="NSUP2">NSUP2</option>
+                    <option value="NSUP3">NSUP3</option>
+                    <option value="NSUP4">NSUP4</option>
+                </select>
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Enter 4-Digit PIN</label>
+                <input type="password" id="pinInput" maxlength="4" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent pin-input text-center text-lg" placeholder="••••">
+            </div>
+
+            <button onclick="login()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition duration-200 transform hover:scale-105">
+                Start Shift
+            </button>
+
+            <div id="loginError" class="mt-3 text-red-600 text-sm text-center hidden"></div>
+        </div>
+
+        <!-- Shift Management Section -->
+        <div id="shiftSection" class="hidden">
+            <!-- Start Shift Content -->
+            <div id="startShiftContent" class="bg-white rounded-2xl shadow-xl p-6">
+                <div class="mb-4">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800">Morning Entry</h3>
+                        <span id="currentDate" class="text-sm text-gray-600"></span>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-4">Supervisor: <span id="loggedSupervisor" class="font-medium"></span></p>
+                </div>
+
+                <div class="mb-4">
+                    <div class="flex justify-between items-center mb-3">
+                        <label class="text-sm font-medium text-gray-700">Select Present Workers</label>
+                        <div class="text-xs text-gray-500">
+                            <span id="selectedCount">0</span> selected
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <button onclick="selectAll()" class="text-xs bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded-full mr-2">Select All</button>
+                        <button onclick="clearAll()" class="text-xs bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded-full">Clear All</button>
+                    </div>
+
+                    <div class="max-h-64 overflow-y-auto border border-gray-200 rounded-lg p-3">
+                        <div id="workersList" class="space-y-2"></div>
+                    </div>
+                </div>
+
+                <button onclick="submitStartShift()" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition duration-200 transform hover:scale-105">
+                    Submit & Send Report
+                </button>
+            </div>
+
+            <!-- Logout Button -->
+            <div class="mt-6 text-center">
+                <button onclick="logout()" class="text-gray-600 hover:text-gray-800 text-sm underline">
+                    Logout
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Supervisor PIN mapping
+        const supervisorPins = {
+            'MAHENDRA KUMAR': '1122',
+            'PINTU SAH': '3344',
+            'HARKIRAT SINGH': '5566',
+            'SUNIL CHAUHAN': '7788',
+            'NSUP1': '9012',
+            'NSUP2': '2345',
+            'NSUP3': '6789',
+            'NSUP4': '1010'
+        };
+
+        // Worker names list
+        const workers = [
+            'HARKIRAT', 'MAHENDRA KUMAR', 'SUNIL CHAUHAN', 'PINTU KUMAR SAH',
+            'AMAN KUMAR', 'ATUL MAHADEO', 'CHANDAN KUMAR', 'DEEPAK DAS',
+            'DEEPAK KUMAR', 'DHIRAJ KUMAR MANJI', 'DAULAT YADAV', 'FOOL SINGH',
+            'KIRAN PASWAN', 'KUNDAN KUMAR', 'MITLESH KUMAR', 'NIRAJ KUMAR',
+            'NANDAN KUMAR', 'NARESH KUMAR', 'OM PRAKASH', 'PANDURANG',
+            'RAJU KUMAR', 'ROSHAN CHAUHAN', 'RAM BABU', 'RAM KISHOR DAS',
+            'RAHUL KUMAR', 'SANDIP MADHUKAR', 'SAHAB CHAUHAN', 'SARVESH KUMAR',
+            'SANJITH YADAV', 'SHIVAM KUMAR', 'SUDISH SAH', 'VISHAL PRUTHVIRAJ'
+        ];
+
+        let currentSupervisor = '';
+        let selectedWorkers = [];
+
+        // Initialize the app
+        function init() {
+            updateDate();
+            createWorkersList();
+        }
+
+        // Update current date display
+        function updateDate() {
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('en-IN', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            document.getElementById('currentDate').textContent = dateStr;
+        }
+
+        // Create workers checklist
+        function createWorkersList() {
+            const workersList = document.getElementById('workersList');
+            workersList.innerHTML = '';
+            
+            workers.forEach(worker => {
+                const div = document.createElement('div');
+                div.className = 'flex items-center';
+                div.innerHTML = `
+                    <input type="checkbox" id="worker_${worker}" value="${worker}" 
+                           onchange="updateSelectedCount()" 
+                           class="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                    <label for="worker_${worker}" class="text-sm text-gray-700 cursor-pointer flex-1">${worker}</label>
+                `;
+                workersList.appendChild(div);
+            });
+        }
+
+        // Login function
+        function login() {
+            const supervisor = document.getElementById('supervisorSelect').value;
+            const pin = document.getElementById('pinInput').value;
+            const errorDiv = document.getElementById('loginError');
+
+            if (!supervisor) {
+                showError('Please select a supervisor');
+                return;
+            }
+
+            if (!pin || pin.length !== 4) {
+                showError('Please enter a 4-digit PIN');
+                return;
+            }
+
+            if (supervisorPins[supervisor] !== pin) {
+                showError('Invalid PIN for selected supervisor');
+                return;
+            }
+
+            // Successful login
+            currentSupervisor = supervisor;
+            document.getElementById('loggedSupervisor').textContent = supervisor;
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('shiftSection').classList.remove('hidden');
+            errorDiv.classList.add('hidden');
+        }
+
+        // Show error message
+        function showError(message) {
+            const errorDiv = document.getElementById('loginError');
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+        }
+
+
+
+        // Worker selection functions
+        function selectAll() {
+            const checkboxes = document.querySelectorAll('#workersList input[type="checkbox"]');
+            checkboxes.forEach(cb => cb.checked = true);
+            updateSelectedCount();
+        }
+
+        function clearAll() {
+            const checkboxes = document.querySelectorAll('#workersList input[type="checkbox"]');
+            checkboxes.forEach(cb => cb.checked = false);
+            updateSelectedCount();
+        }
+
+        function updateSelectedCount() {
+            const checkedBoxes = document.querySelectorAll('#workersList input[type="checkbox"]:checked');
+            document.getElementById('selectedCount').textContent = checkedBoxes.length;
+        }
+
+        // Submit start shift
+        function submitStartShift() {
+            const checkedBoxes = document.querySelectorAll('#workersList input[type="checkbox"]:checked');
+            
+            if (checkedBoxes.length === 0) {
+                alert('Please select at least one worker');
+                return;
+            }
+
+            selectedWorkers = Array.from(checkedBoxes).map(cb => cb.value);
+            
+            // Create WhatsApp message
+            const date = new Date().toLocaleDateString('en-IN');
+            const workerList = selectedWorkers.join('\n• ');
+            
+            const message = `🌅 SHIFT START REPORT
+            
+📅 Date: ${date}
+👨‍💼 Supervisor: ${currentSupervisor}
+👥 Workers Present (${selectedWorkers.length}):
+
+• ${workerList}
+
+✅ Shift started successfully`;
+
+            // Redirect to WhatsApp
+            const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+            window.open(whatsappUrl, '_blank');
+        }
+
+
+
+        // Logout function
+        function logout() {
+            currentSupervisor = '';
+            selectedWorkers = [];
+            document.getElementById('supervisorSelect').value = '';
+            document.getElementById('pinInput').value = '';
+            clearAll();
+            document.getElementById('loginSection').classList.remove('hidden');
+            document.getElementById('shiftSection').classList.add('hidden');
+            document.getElementById('loginError').classList.add('hidden');
+        }
+
+        // Initialize app when page loads
+        window.onload = init;
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96d57327a6ce6efe',t:'MTc1NDg5MTM2OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
